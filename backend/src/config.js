@@ -18,6 +18,9 @@ export const TAKE_QR_MINUTES = 10;
 export const VERIFY_WINDOW_MINUTES = 5;
 // How long a login lasts.
 export const SESSION_DAYS = 7;
+// After this many wrong passwords, the ID is locked for a while.
+export const LOGIN_MAX_TRIES = 5;
+export const LOGIN_LOCK_MINUTES = 5;
 // The most clothes one bag can hold.
 export const MAX_CLOTHES = 15;
 // The biggest photo we accept, in characters of the data URL (about 4 MB of image).

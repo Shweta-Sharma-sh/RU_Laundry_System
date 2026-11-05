@@ -34,6 +34,16 @@ test("a wrong password is refused", async () => {
   assert.equal(answer.status, 401);
 });
 
+test("an ID is locked after 5 wrong passwords", async () => {
+  const wrong = { portal: "worker", identifier: "W-002", password: "wrong" };
+  for (let i = 0; i < 5; i += 1) {
+    assert.equal((await call("", "POST", "/auth/login", wrong)).status, 401);
+  }
+  // Now even the right password is refused for a few minutes.
+  const right = { portal: "worker", identifier: "W-002", password: "worker@ru" };
+  assert.equal((await call("", "POST", "/auth/login", right)).status, 429);
+});
+
 test("the database keeps only a hash of the login token", async () => {
   const sessions = await query("SELECT token_hash FROM sessions");
   const stored = sessions.map((s) => s.tokenHash);

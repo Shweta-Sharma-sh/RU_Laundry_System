@@ -18,6 +18,7 @@ import bcrypt from "bcryptjs";
 import { query, queryOne } from "./db.js";
 import { ApiError } from "./errors.js";
 import { SESSION_DAYS } from "./config.js";
+import { checkNotLocked, recordWrongPassword, clearWrongPasswords } from "./login-limit.js";
 
 /** Turns a token into its SHA-256 hash (always the same hash for the same token). */
 function hashToken(token) {
@@ -47,6 +48,9 @@ export async function login(portal, identifier, password) {
   else if (portal === "admin") role = "ADMIN";
   else throw new ApiError(400, "Unknown portal.");
 
+  // Too many wrong passwords for this ID? Stop here.
+  checkNotLocked(role, identifier);
+
   const user = await queryOne(
     "SELECT * FROM users WHERE LOWER(id) = LOWER($1) AND role = $2",
     [String(identifier || "").trim(), role],
@@ -56,10 +60,16 @@ export async function login(portal, identifier, password) {
   if (user) passwordIsRight = await bcrypt.compare(String(password || ""), user.passwordHash);
 
   if (!passwordIsRight) {
+    recordWrongPassword(role, identifier);
     if (role === "STUDENT") throw new ApiError(401, "Incorrect Student ID or password. Please try again.");
     if (role === "WORKER") throw new ApiError(401, "Incorrect Worker ID or password. Please try again.");
     throw new ApiError(401, "Incorrect username or password. Please try again.");
   }
+
+  clearWrongPasswords(role, identifier);
+
+  // Remove sessions that have run out, so the table does not keep growing.
+  await query("DELETE FROM sessions WHERE expires_at < now()");
 
   // A long random text that nobody can guess.
   const token = crypto.randomBytes(32).toString("hex");
