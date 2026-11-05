@@ -16,7 +16,7 @@ You need Node.js 22 or newer and PostgreSQL.
 ```bash
 cd backend
 npm install
-cp .env.example .env        # then change QR_SECRET
+cp .env.example .env        # then fill in QR_SECRET (see the comment in the file)
 createdb ru_laundry
 npm run db:setup            # tables + demo data
 npm run dev                 # http://localhost:4000
