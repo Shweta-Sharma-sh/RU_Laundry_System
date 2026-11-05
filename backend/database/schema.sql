@@ -111,6 +111,10 @@ CREATE UNIQUE INDEX one_open_give_per_student ON give_requests (student_id)
 CREATE UNIQUE INDEX one_open_take_per_student ON take_requests (student_id)
   WHERE status IN ('PENDING', 'SCANNED', 'VERIFIED');
 
+-- A student's history, already sorted by time.
+CREATE INDEX give_requests_by_student ON give_requests (student_id, created_at);
+CREATE INDEX take_requests_by_student ON take_requests (student_id, created_at);
+
 -- ---------------------------------------------------------------------------
 -- Activity history (the audit log)
 -- ---------------------------------------------------------------------------
@@ -139,7 +143,8 @@ CREATE TABLE activity (
 CREATE RULE activity_no_update AS ON UPDATE TO activity DO INSTEAD NOTHING;
 CREATE RULE activity_no_delete AS ON DELETE TO activity DO INSTEAD NOTHING;
 
-CREATE INDEX activity_by_student ON activity (student_id);
+CREATE INDEX activity_by_student ON activity (student_id, at);
+CREATE INDEX activity_by_time ON activity (at);
 CREATE INDEX activity_by_bag ON activity (bag_number);
 CREATE INDEX activity_by_ref ON activity (ref_type, ref_id);
 
@@ -170,6 +175,8 @@ CREATE TABLE complaints (
   resolved_at       TIMESTAMPTZ
 );
 
+CREATE INDEX complaints_by_student ON complaints (student_id, created_at);
+
 -- Every reply written on a complaint. Nothing is ever deleted.
 CREATE TABLE complaint_updates (
   id            BIGSERIAL PRIMARY KEY,
@@ -194,7 +201,7 @@ CREATE TABLE notifications (
   read       BOOLEAN NOT NULL DEFAULT false
 );
 
-CREATE INDEX notifications_by_student ON notifications (student_id);
+CREATE INDEX notifications_by_student ON notifications (student_id, at);
 
 -- ---------------------------------------------------------------------------
 -- The laundry counter
