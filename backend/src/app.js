@@ -13,6 +13,7 @@ import { FRONTEND_URL } from "./config.js";
 import { handleErrors } from "./errors.js";
 import { expireOldRequests } from "./expire.js";
 import authRoutes from "./routes/auth.js";
+import studentRoutes from "./routes/student.js";
 
 const app = express();
 
@@ -34,6 +35,7 @@ app.use("/api", async (req, res, next) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/student", studentRoutes);
 
 // Any other address.
 app.use((req, res) => {
