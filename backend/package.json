@@ -8,7 +8,7 @@
     "start": "node --env-file-if-exists=.env src/server.js",
     "dev": "node --env-file-if-exists=.env --watch src/server.js",
     "db:setup": "node --env-file-if-exists=.env database/setup.js",
-    "test": "node --env-file-if-exists=.env --test --test-concurrency=1 tests/"
+    "test": "DATABASE_URL=${TEST_DATABASE_URL:-postgres://localhost:5432/ru_laundry_test} node --test --test-concurrency=1 \"tests/*.test.js\""
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
