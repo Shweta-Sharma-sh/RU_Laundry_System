@@ -14,6 +14,7 @@ import { handleErrors } from "./errors.js";
 import { expireOldRequests } from "./expire.js";
 import authRoutes from "./routes/auth.js";
 import studentRoutes from "./routes/student.js";
+import workerRoutes from "./routes/worker.js";
 
 const app = express();
 
@@ -36,6 +37,7 @@ app.use("/api", async (req, res, next) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/student", studentRoutes);
+app.use("/api/worker", workerRoutes);
 
 // Any other address.
 app.use((req, res) => {
