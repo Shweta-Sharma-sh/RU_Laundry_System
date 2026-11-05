@@ -33,7 +33,7 @@ erDiagram
 | Table | One row is... | Key columns |
 |---|---|---|
 | `users` | a student, worker or admin | `id` is what they type to sign in (`RU2026CS001`, `W-001`, `admin`). `role` is `STUDENT`, `WORKER` or `ADMIN`. Passwords are stored only as bcrypt hashes. |
-| `sessions` | a signed in browser | `token` (random, 64 characters), `user_id`, `expires_at` (7 days) |
+| `sessions` | a signed in browser | `token_hash` (SHA-256 of the random token, never the token itself), `user_id`, `expires_at` (7 days) |
 | `bags` | a student's permanent bag | `bag_number` (`B-001`), `student_id` (**unique**: one bag per student), `status`, `quantity` |
 | `photos` | an uploaded picture | `student_id` (the owner), `kind` (`REFERENCE` or `COMPLAINT_EVIDENCE`), `data_url` |
 | `give_requests` | one "Give Clothes" | `status` `PENDING` → `RECEIVED` (or `EXPIRED`), `qr_expires_at`, `scanned_at`, `confirmed_quantity` |
@@ -58,6 +58,7 @@ erDiagram
 | Complaint statuses are separate from bag statuses | their own `CHECK` list on `complaints.status` |
 | The reference photo is private | `photos.student_id` records the owner. The only route that returns a reference photo checks `student_id` = the signed in student. No worker or admin route reads `REFERENCE` photos. |
 | Passwords are never stored | only `password_hash` (bcrypt) |
+| Login tokens are never stored | only `sessions.token_hash` (SHA-256). A copy of the database cannot be used to sign in. |
 
 ## Sizes and growth
 

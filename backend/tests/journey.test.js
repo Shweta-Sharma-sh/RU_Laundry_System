@@ -34,6 +34,13 @@ test("a wrong password is refused", async () => {
   assert.equal(answer.status, 401);
 });
 
+test("the database keeps only a hash of the login token", async () => {
+  const sessions = await query("SELECT token_hash FROM sessions");
+  const stored = sessions.map((s) => s.tokenHash);
+  assert.ok(stored.length > 0);
+  assert.ok(!stored.includes(student), "the real token must not be in the database");
+});
+
 test("each area only lets its own role in", async () => {
   assert.equal((await call(student, "GET", "/worker/dashboard")).status, 403);
   assert.equal((await call(worker, "GET", "/admin/dashboard")).status, 403);

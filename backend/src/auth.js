@@ -9,12 +9,20 @@
 //   3. Every other request sends the token back in a header:
 //          Authorization: Bearer <token>
 //   4. We look the token up in the sessions table to find the user.
+//
+// The sessions table only keeps a SHA-256 hash of the token, never the token
+// itself. So even if somebody copies the database, they cannot sign in with it.
 
 import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
 import { query, queryOne } from "./db.js";
 import { ApiError } from "./errors.js";
 import { SESSION_DAYS } from "./config.js";
+
+/** Turns a token into its SHA-256 hash (always the same hash for the same token). */
+function hashToken(token) {
+  return crypto.createHash("sha256").update(token).digest("hex");
+}
 
 /** The user as the frontend sees it (never with the password). */
 export async function publicUser(user) {
@@ -56,8 +64,8 @@ export async function login(portal, identifier, password) {
   // A long random text that nobody can guess.
   const token = crypto.randomBytes(32).toString("hex");
   const expiresAt = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000);
-  await query("INSERT INTO sessions (token, user_id, expires_at) VALUES ($1, $2, $3)", [
-    token,
+  await query("INSERT INTO sessions (token_hash, user_id, expires_at) VALUES ($1, $2, $3)", [
+    hashToken(token),
     user.id,
     expiresAt,
   ]);
@@ -79,14 +87,14 @@ export async function getUserFromRequest(req) {
   return queryOne(
     `SELECT users.* FROM sessions
      JOIN users ON users.id = sessions.user_id
-     WHERE sessions.token = $1 AND sessions.expires_at > now()`,
-    [token],
+     WHERE sessions.token_hash = $1 AND sessions.expires_at > now()`,
+    [hashToken(token)],
   );
 }
 
 export async function logout(req) {
   const token = getToken(req);
-  if (token) await query("DELETE FROM sessions WHERE token = $1", [token]);
+  if (token) await query("DELETE FROM sessions WHERE token_hash = $1", [hashToken(token)]);
 }
 
 /**

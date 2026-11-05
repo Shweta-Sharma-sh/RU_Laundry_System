@@ -25,8 +25,9 @@ CREATE TABLE users (
 );
 
 -- A signed in user. The frontend sends the token with every request.
+-- Only the SHA-256 hash of the token is stored, never the token itself.
 CREATE TABLE sessions (
-  token      TEXT PRIMARY KEY,
+  token_hash TEXT PRIMARY KEY,
   user_id    TEXT NOT NULL REFERENCES users(id),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   expires_at TIMESTAMPTZ NOT NULL
